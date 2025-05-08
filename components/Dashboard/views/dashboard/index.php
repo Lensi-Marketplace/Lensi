@@ -57,14 +57,37 @@ $initialTheme = $savedTheme ?: ($systemTheme ?: 'light');
     }
     
     [data-bs-theme="dark"] {
-        --light: #121212;
-        --dark: #F9F7F0;
-        --accent: #A4C2E5;
-        --accent-dark: #171821;
-        --primary: #5D8BB3;
-        --primary-rgb: 93, 139, 179;
-        --secondary: #8FB3DE;
-        --light-gray: #1a1c24;
+        --text-primary: #FFFFFF;
+        --text-secondary: #A4C2E5;
+        
+        .dashboard-content {
+            color: var(--text-primary);
+        }
+        
+        .stats-card-title,
+        .dashboard-card-title,
+        .section-title {
+            color: var(--text-primary);
+        }
+        
+        .stats-card-value,
+        .dashboard-card-value {
+            color: var(--text-primary);
+        }
+        
+        .stats-card-subtitle,
+        .dashboard-card-subtitle,
+        .section-subtitle {
+            color: var(--text-secondary);
+        }
+        
+        .table {
+            color: var(--text-primary);
+        }
+        
+        .table td {
+            color: var(--text-secondary);
+        }
     }
     
     body {

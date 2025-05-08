@@ -36,13 +36,13 @@ $initialTheme = $savedTheme ?: ($systemTheme ?: 'light');
     <title>LenSi - Freelance Marketplace</title>
     
     <!-- Preload critical assets -->
-    <link rel="preload" href="assets/images/logo_white.svg" as="image" type="image/svg+xml">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" as="style">
+    <link rel="preload" href="/web/assets/images/logo_white.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=Poppins:wght@400;500;600;700&display=swap" as="style">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
     <link rel="preload" href="script.js" as="script">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="assets/images/logo_white.svg" sizes="any">
+    <link rel="icon" type="image/svg+xml" href="/web/assets/images/logo_white.svg" sizes="any">
     
     <!-- Fonts and CSS, loaded with minimal blocking -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -123,8 +123,21 @@ $initialTheme = $savedTheme ?: ($systemTheme ?: 'light');
         --primary: #5D8BB3;
         --primary-rgb: 93, 139, 179;
         --secondary: #8FB3DE;
-        color: var(--accent);
+        color: #FFFFFF;
         background-color: var(--light);
+    }
+
+    [data-bs-theme="dark"] h1, 
+    [data-bs-theme="dark"] h2, 
+    [data-bs-theme="dark"] h3, 
+    [data-bs-theme="dark"] h4, 
+    [data-bs-theme="dark"] h5, 
+    [data-bs-theme="dark"] h6 {
+        color: #FFFFFF;
+    }
+
+    [data-bs-theme="dark"] p {
+        color: #A4C2E5;
     }
 
     h1, h2, h3, h4, h5, h6 {

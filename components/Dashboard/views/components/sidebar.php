@@ -32,57 +32,49 @@ $initialTheme = $savedTheme ?: ($systemTheme ?: 'light');
                     Dashboard
                 </a>
             </li>
-            <?php if ($userType === 'freelancer'): ?>
+            
             <li class="sidebar-menu-item">
                 <a href="?page=projects" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'projects') ? 'active' : ''; ?>">
                     <i class="bi bi-briefcase-fill sidebar-menu-icon"></i>
                     Projects
                 </a>
             </li>
+            
             <li class="sidebar-menu-item">
-                <a href="?page=services" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'services') ? 'active' : ''; ?>">
+                <a href="?page=job-offers" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'job-offers') ? 'active' : ''; ?>">
                     <i class="bi bi-person-workspace sidebar-menu-icon"></i>
-                    My Services
+                    Job Offers
                 </a>
             </li>
+
+            <li class="sidebar-menu-item">
+                <a href="?page=interviews" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'interviews') ? 'active' : ''; ?>">
+                    <i class="bi bi-calendar2-week sidebar-menu-icon"></i>
+                    Interviews
+                </a>
+            </li>
+            
             <li class="sidebar-menu-item">
                 <a href="?page=messages" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'messages') ? 'active' : ''; ?>">
                     <i class="bi bi-chat-dots-fill sidebar-menu-icon"></i>
                     Messages
                 </a>
             </li>
-            <?php elseif ($userType === 'employer'): ?>
-            <li class="sidebar-menu-item">
-                <a href="?page=my-projects" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'my-projects') ? 'active' : ''; ?>">
-                    <i class="bi bi-briefcase-fill sidebar-menu-icon"></i>
-                    My Projects
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="?page=find-talent" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'find-talent') ? 'active' : ''; ?>">
-                    <i class="bi bi-people-fill sidebar-menu-icon"></i>
-                    Find Talent
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="?page=messages" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'messages') ? 'active' : ''; ?>">
-                    <i class="bi bi-chat-dots-fill sidebar-menu-icon"></i>
-                    Messages
-                </a>
-            </li>
-            <?php endif; ?>
+            
             <li class="sidebar-menu-item">
                 <a href="?page=payments" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'payments') ? 'active' : ''; ?>">
                     <i class="bi bi-wallet2 sidebar-menu-icon"></i>
                     Payments
                 </a>
             </li>
+            
             <li class="sidebar-menu-item">
                 <a href="?page=profile" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'profile') ? 'active' : ''; ?>">
                     <i class="bi bi-person-circle sidebar-menu-icon"></i>
                     Profile
                 </a>
             </li>
+            
             <li class="sidebar-menu-item">
                 <a href="?page=settings" class="sidebar-menu-link <?php echo (isset($_GET['page']) && $_GET['page'] === 'settings') ? 'active' : ''; ?>">
                     <i class="bi bi-gear-fill sidebar-menu-icon"></i>
@@ -94,9 +86,9 @@ $initialTheme = $savedTheme ?: ($systemTheme ?: 'light');
     
     <div class="sidebar-footer">
         <div class="theme-switch">
-            <label for="theme-toggle" class="d-flex align-items-center">
+            <label for="themeToggle" class="d-flex align-items-center">
                 <small class="me-2">Theme</small>
-                <input type="checkbox" id="theme-toggle" <?php echo $initialTheme === 'dark' ? 'checked' : ''; ?>>
+                <input type="checkbox" id="themeToggle" <?php echo $initialTheme === 'dark' ? 'checked' : ''; ?>>
                 <span class="theme-slider"></span>
             </label>
         </div>

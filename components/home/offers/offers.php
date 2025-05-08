@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../Dashboard/controllers/JobOfferController.php';
 
 // Initialize message variable
 $message = '';
@@ -23,7 +24,7 @@ function validateJobOffer($data) {
     }
     
     // Category validation
-    if (empty($data['category'])) {
+    if (empty($data['category_id'])) {
         $errors['category'] = "Category is required";
     }
     
@@ -37,15 +38,8 @@ function validateJobOffer($data) {
     }
     
     // Location validation
-    if (empty($data['location'])) {
+    if (empty($data['location_id'])) {
         $errors['location'] = "Location is required";
-    }
-    
-    // Image URL validation
-    if (empty($data['image_url'])) {
-        $errors['image_url'] = "Image URL is required";
-    } elseif (!filter_var($data['image_url'], FILTER_VALIDATE_URL)) {
-        $errors['image_url'] = "Please enter a valid URL";
     }
     
     return $errors;
@@ -53,42 +47,37 @@ function validateJobOffer($data) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $jobOfferController = new JobOfferController();
+    
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'create':
+                $validation_errors = validateJobOffer($_POST);
+                if (empty($validation_errors)) {
+                    $result = $jobOfferController->create();
+                    if ($result['success']) {
+                        $_SESSION['success_message'] = $result['message'];
+                        header('Location: /web/components/home/offers/offers.php');
+                        exit;
+                    } else {
+                        $error = $result['message'];
+                    }
+                } else {
+                    $error = implode("<br>", $validation_errors);
+                }
+                break;
+
             case 'update':
                 $validation_errors = validateJobOffer($_POST);
-                
                 if (empty($validation_errors)) {
-                    $title = $_POST['title'];
-                    $description = $_POST['description'];
-                    $category = $_POST['category'];
-                    $salary_min = $_POST['salary_min'];
-                    $salary_max = $_POST['salary_max'];
-                    $location = $_POST['location'];
-                    $image_url = $_POST['image_url'];
-                    
-                    // Generate slug from title
-                    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
-                    
-                    if ($_POST['action'] === 'create') {
-                        $sql = "INSERT INTO job_offers (title, description, category_id, salary_min, salary_max, location_id, image_url, slug) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-                        $stmt = $pdo->prepare($sql);
-                        if ($stmt->execute([$title, $description, $category, $salary_min, $salary_max, $location, $image_url, $slug])) {
-                            $message = "Job offer created successfully!";
-                        } else {
-                            $error = "Error creating job offer";
-                        }
+                    $id = $_POST['job_id'];
+                    $result = $jobOfferController->update($id);
+                    if ($result['success']) {
+                        $_SESSION['success_message'] = $result['message'];
+                        header('Location: /web/components/home/offers/offers.php');
+                        exit;
                     } else {
-                        $id = $_POST['job_id'];
-                        $sql = "UPDATE job_offers SET title=?, description=?, category_id=?, salary_min=?, salary_max=?, location_id=?, image_url=?, slug=? WHERE job_id=?";
-                        $stmt = $pdo->prepare($sql);
-                        if ($stmt->execute([$title, $description, $category, $salary_min, $salary_max, $location, $image_url, $slug, $id])) {
-                            $message = "Job offer updated successfully!";
-                        } else {
-                            $error = "Error updating job offer";
-                        }
+                        $error = $result['message'];
                     }
                 } else {
                     $error = implode("<br>", $validation_errors);
@@ -98,12 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'delete':
                 $id = $_POST['job_id'];
                 if (!empty($id)) {
-                    $sql = "DELETE FROM job_offers WHERE job_id = ?";
-                    $stmt = $pdo->prepare($sql);
-                    if ($stmt->execute([$id])) {
-                        $message = "Job offer deleted successfully!";
+                    $result = $jobOfferController->delete($id);
+                    if ($result['success']) {
+                        $_SESSION['success_message'] = $result['message'];
+                        header('Location: /web/components/home/offers/offers.php');
+                        exit;
                     } else {
-                        $error = "Error deleting job offer";
+                        $error = $result['message'];
                     }
                 }
                 break;
@@ -130,6 +120,16 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $sql = "SELECT * FROM locations";
 $stmt = $pdo->query($sql);
 $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Show any session messages and clear them
+if (isset($_SESSION['success_message'])) {
+    $message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+if (isset($_SESSION['error_message'])) {
+    $error = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -160,9 +160,48 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             padding-top: 60px;
         }
 
-        [data-bs-theme="dark"] body {
-            background-color: var(--background-dark);
-            color: var(--text-light);
+        [data-bs-theme="dark"] {
+            .page-header {
+                color: #FFFFFF;
+            }
+
+            .job-card {
+                background: rgba(31, 32, 40, 0.8);
+                border: 1px solid rgba(70, 90, 120, 0.2);
+            }
+
+            .card-title {
+                color: #FFFFFF;
+            }
+
+            .card-text {
+                color: #A4C2E5;
+            }
+
+            .job-meta-item {
+                color: #A4C2E5;
+            }
+
+            .job-meta-item i {
+                color: #8FB3DE;
+            }
+
+            .modal-content {
+                background: var(--background-dark);
+                color: #FFFFFF;
+            }
+
+            .modal-title {
+                color: #FFFFFF;
+            }
+
+            .form-label {
+                color: #A4C2E5;
+            }
+
+            .form-text {
+                color: rgba(255, 255, 255, 0.7);
+            }
         }
 
         .page-header {
@@ -185,11 +224,6 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .job-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        [data-bs-theme="dark"] .job-card {
-            background: rgba(31,32,40,0.8);
-            border: 1px solid rgba(70,90,120,0.2);
         }
 
         .job-card-header {
@@ -335,11 +369,11 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </button>
                             <button class="btn btn-sm btn-outline-primary edit-job" 
                                     data-bs-toggle="modal" 
-                                    data-bs-target="#editJobModal"
+                                    data-bs-target="#jobModal"
                                     data-job='<?php echo json_encode($job); ?>'>
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <form action="" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this job?');">
+                            <form action="/web/components/Dashboard/index.php?section=job-offers" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this job?');">
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="job_id" value="<?php echo $job['job_id']; ?>">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -399,328 +433,128 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- Add Job Modal -->
-    <div class="modal fade" id="addJobModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Job</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="" method="POST">
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="create">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Job Title</label>
-                            <input type="text" class="form-control" id="title" name="title">
-                        </div>
-                        <div class="mb-3">
-                            <label for="category" class="form-label">Category</label>
-                            <select class="form-control" id="category" name="category">
-                                <?php foreach ($categories as $category): ?>
-                                    <option value="<?php echo $category['category_id']; ?>">
-                                        <?php echo htmlspecialchars($category['name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="salary_min" class="form-label">Minimum Salary</label>
-                                    <input type="number" class="form-control" id="salary_min" name="salary_min">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="salary_max" class="form-label">Maximum Salary</label>
-                                    <input type="number" class="form-control" id="salary_max" name="salary_max">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="location" class="form-label">Location</label>
-                            <select class="form-control" id="location" name="location">
-                                <?php foreach ($locations as $location): ?>
-                                    <option value="<?php echo $location['location_id']; ?>">
-                                        <?php echo $location['is_remote'] ? 'Remote' : htmlspecialchars($location['city'] . ', ' . $location['country']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="image_url" class="form-label">Image URL</label>
-                            <input type="url" class="form-control" id="image_url" name="image_url">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Add Job</button>
-                    </div>
-                </form>
+    <!-- Single Job Modal for both Add and Edit -->
+<div class="modal fade" id="jobModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add New Job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <form method="POST" action="/web/components/home/offers/offers.php">
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create">
+                    <input type="hidden" name="job_id" id="job_id">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Job Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-control" id="category_id" name="category_id" required>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo $category['category_id']; ?>">
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="salary_min" class="form-label">Minimum Salary</label>
+                                <input type="number" class="form-control" id="salary_min" name="salary_min" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="salary_max" class="form-label">Maximum Salary</label>
+                                <input type="number" class="form-control" id="salary_max" name="salary_max" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="location_id" class="form-label">Location</label>
+                        <select class="form-control" id="location_id" name="location_id" required>
+                            <?php foreach ($locations as $location): ?>
+                                <option value="<?php echo $location['location_id']; ?>">
+                                    <?php echo $location['is_remote'] ? 'Remote' : htmlspecialchars($location['city'] . ', ' . $location['country']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image_url" class="form-label">Image URL</label>
+                        <input type="url" class="form-control" id="image_url" name="image_url">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Add Job</button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <!-- Edit Job Modal -->
-    <div class="modal fade" id="editJobModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Job</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="" method="POST">
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="update">
-                        <input type="hidden" name="job_id" id="edit_job_id">
-                        <div class="mb-3">
-                            <label for="edit_title" class="form-label">Job Title</label>
-                            <input type="text" class="form-control" id="edit_title" name="title">
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_category" class="form-label">Category</label>
-                            <select class="form-control" id="edit_category" name="category">
-                                <?php foreach ($categories as $category): ?>
-                                    <option value="<?php echo $category['category_id']; ?>">
-                                        <?php echo htmlspecialchars($category['name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_description" class="form-label">Description</label>
-                            <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="edit_salary_min" class="form-label">Minimum Salary</label>
-                                    <input type="number" class="form-control" id="edit_salary_min" name="salary_min">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="edit_salary_max" class="form-label">Maximum Salary</label>
-                                    <input type="number" class="form-control" id="edit_salary_max" name="salary_max">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_location" class="form-label">Location</label>
-                            <select class="form-control" id="edit_location" name="location">
-                                <?php foreach ($locations as $location): ?>
-                                    <option value="<?php echo $location['location_id']; ?>">
-                                        <?php echo $location['is_remote'] ? 'Remote' : htmlspecialchars($location['city'] . ', ' . $location['country']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="edit_image_url" class="form-label">Image URL</label>
-                            <input type="url" class="form-control" id="edit_image_url" name="image_url">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Update Job</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+</div>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Form validation
-        function validateForm(form) {
-            const formData = new FormData(form);
-            const errors = [];
-            
-            // Title validation
-            const title = formData.get('title');
-            if (!title) {
-                errors.push('Title is required');
-            } else if (title.length < 3 || title.length > 100) {
-                errors.push('Title must be between 3 and 100 characters');
-            }
-            
-            // Description validation
-            const description = formData.get('description');
-            if (!description) {
-                errors.push('Description is required');
-            } else if (description.length < 10) {
-                errors.push('Description must be at least 10 characters');
-            }
-            
-            // Category validation
-            if (!formData.get('category')) {
-                errors.push('Category is required');
-            }
-            
-            // Salary validation
-            const salaryMin = parseInt(formData.get('salary_min'));
-            const salaryMax = parseInt(formData.get('salary_max'));
-            
-            if (!salaryMin || !salaryMax) {
-                errors.push('Both minimum and maximum salary are required');
-            } else if (salaryMin > salaryMax) {
-                errors.push('Minimum salary cannot be greater than maximum salary');
-            } else if (salaryMin < 0 || salaryMax < 0) {
-                errors.push('Salary cannot be negative');
-            }
-            
-            // Location validation
-            if (!formData.get('location')) {
-                errors.push('Location is required');
-            }
-            
-            // Image URL validation
-            const imageUrl = formData.get('image_url');
-            if (!imageUrl) {
-                errors.push('Image URL is required');
-            } else {
-                try {
-                    new URL(imageUrl);
-                } catch {
-                    errors.push('Please enter a valid URL');
-                }
-            }
-            
-            return errors;
-        }
-
-        // Handle form submissions
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
-            form.addEventListener('submit', function(e) {
-                if (form.querySelector('input[name="action"]').value !== 'delete') {
-                    const errors = validateForm(this);
-                    if (errors.length > 0) {
-                        e.preventDefault();
-                        const errorMessage = errors.join('<br>');
-                        const alertDiv = document.createElement('div');
-                        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-                        alertDiv.innerHTML = `
-                            ${errorMessage}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        `;
-                        this.insertBefore(alertDiv, this.firstChild);
-                        
-                        // Auto-hide the error after 5 seconds
-                        setTimeout(() => {
-                            const bsAlert = new bootstrap.Alert(alertDiv);
-                            bsAlert.close();
-                        }, 5000);
-                    }
-                }
-            });
-        });
-
         // Edit job functionality
         document.querySelectorAll('.edit-job').forEach(button => {
             button.addEventListener('click', function() {
                 const job = JSON.parse(this.dataset.job);
-                document.getElementById('edit_job_id').value = job.job_id;
-                document.getElementById('edit_title').value = job.title;
-                document.getElementById('edit_category').value = job.category_id;
-                document.getElementById('edit_description').value = job.description;
-                document.getElementById('edit_salary_min').value = job.salary_min;
-                document.getElementById('edit_salary_max').value = job.salary_max;
-                document.getElementById('edit_location').value = job.location_id;
-                document.getElementById('edit_image_url').value = job.image_url;
+                const form = document.querySelector('#jobModal form');
+                
+                // Update form for editing
+                form.elements['action'].value = 'update';
+                form.elements['job_id'].value = job.job_id;
+                form.elements['title'].value = job.title;
+                form.elements['category_id'].value = job.category_id;
+                form.elements['description'].value = job.description;
+                form.elements['salary_min'].value = job.salary_min;
+                form.elements['salary_max'].value = job.salary_max;
+                form.elements['location_id'].value = job.location_id;
+                form.elements['image_url'].value = job.image_url || '';
+                
+                // Update modal title and button
+                document.getElementById('modalTitle').textContent = 'Edit Job';
+                document.getElementById('submitBtn').textContent = 'Update Job';
             });
         });
 
-        // Show job functionality
-        document.querySelectorAll('.show-job').forEach(button => {
-            button.addEventListener('click', function() {
-                const job = JSON.parse(this.dataset.job);
-                document.getElementById('show_title').textContent = job.title;
-                document.getElementById('show_category').textContent = job.category_name;
-                document.getElementById('show_description').textContent = job.description;
-                document.getElementById('show_salary').textContent = `$${Number(job.salary_min).toLocaleString()} - $${Number(job.salary_max).toLocaleString()}`;
-                document.getElementById('show_location').textContent = job.is_remote ? 'Remote' : `${job.city}, ${job.country}`;
-                document.getElementById('show_applicants').textContent = `${job.applicant_count} applicants`;
-                document.getElementById('show_image').src = job.image_url;
-            });
+        // Reset form when opening modal for new job
+        document.getElementById('jobModal').addEventListener('show.bs.modal', function(event) {
+            // Only reset if it's not coming from the edit button
+            if (!event.relatedTarget || !event.relatedTarget.classList.contains('edit-job')) {
+                const form = this.querySelector('form');
+                form.reset();
+                form.elements['action'].value = 'create';
+                form.elements['job_id'].value = '';
+                document.getElementById('modalTitle').textContent = 'Add New Job';
+                document.getElementById('submitBtn').textContent = 'Add Job';
+            }
         });
 
-        // Real-time validation feedback
-        const inputs = document.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            input.addEventListener('input', function() {
-                const formData = new FormData();
-                formData.append(this.name, this.value);
-                
-                let error = '';
-                switch(this.name) {
-                    case 'title':
-                        if (this.value.length > 0 && (this.value.length < 3 || this.value.length > 100)) {
-                            error = 'Title must be between 3 and 100 characters';
-                        }
-                        break;
-                    case 'description':
-                        if (this.value.length > 0 && this.value.length < 10) {
-                            error = 'Description must be at least 10 characters';
-                        }
-                        break;
-                    case 'salary_min':
-                    case 'salary_max':
-                        const salaryMin = parseInt(document.querySelector('[name="salary_min"]').value) || 0;
-                        const salaryMax = parseInt(document.querySelector('[name="salary_max"]').value) || 0;
-                        if (salaryMin > salaryMax && salaryMax !== 0) {
-                            error = 'Minimum salary cannot be greater than maximum salary';
-                        } else if (salaryMin < 0 || salaryMax < 0) {
-                            error = 'Salary cannot be negative';
-                        }
-                        break;
-                    case 'image_url':
-                        if (this.value) {
-                            try {
-                                new URL(this.value);
-                            } catch {
-                                error = 'Please enter a valid URL';
-                            }
-                        }
-                        break;
-                }
-                
-                // Show or clear error feedback
-                const feedback = this.nextElementSibling;
-                if (error) {
-                    if (!feedback || !feedback.classList.contains('invalid-feedback')) {
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'invalid-feedback';
-                        errorDiv.textContent = error;
-                        this.parentNode.appendChild(errorDiv);
-                        this.classList.add('is-invalid');
-                    } else {
-                        feedback.textContent = error;
+        // Form validation
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (this.elements['salary_max'] && this.elements['salary_min']) {
+                    const salaryMin = parseFloat(this.elements['salary_min'].value);
+                    const salaryMax = parseFloat(this.elements['salary_max'].value);
+                    if (salaryMax <= salaryMin) {
+                        e.preventDefault();
+                        alert('Maximum salary must be greater than minimum salary');
                     }
-                } else {
-                    if (feedback && feedback.classList.contains('invalid-feedback')) {
-                        feedback.remove();
-                    }
-                    this.classList.remove('is-invalid');
                 }
             });
-        });
-
-        // Auto-hide alerts after 5 seconds
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }, 5000);
         });
     });
     </script>

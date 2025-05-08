@@ -790,6 +790,28 @@
         font-size: 1rem;
     }
 }
+
+[data-bs-theme="dark"] {
+    .section-frame {
+        color: #A4C2E5;
+    }
+    
+    .section-frame-subtitle {
+        color: #8FB3DE;
+    }
+    
+    .section-description {
+        color: #A4C2E5;
+    }
+    
+    .content-block {
+        color: #A4C2E5;
+    }
+    
+    .content-block h3 {
+        color: #FFFFFF;
+    }
+}
 </style>
 
 <!-- Categories Section Frame -->

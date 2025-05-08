@@ -276,26 +276,44 @@ $notFound = !$gig || !$freelancer;
 
     /* Dark mode adjustments */
     [data-bs-theme="dark"] {
-        .provider-card,
-        .price-card {
-            background: rgba(31, 32, 40, 0.8);
-            border-color: rgba(255, 255, 255, 0.05);
+        .service-title,
+        .section-title,
+        .review-author {
+            color: #FFFFFF;
         }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
+        
+        .service-description,
+        .service-details,
+        .review-text,
+        .review-date {
+            color: #A4C2E5;
         }
-
-        .skill-badge {
-            background: rgba(255, 255, 255, 0.1);
+        
+        .service-price {
+            color: #8FB3DE;
         }
-
-        .nav-tabs .nav-link {
-            color: rgba(255, 255, 255, 0.6);
+        
+        .service-card {
+            background-color: var(--accent-dark);
+            border-color: rgba(255, 255, 255, 0.1);
         }
-
-        .nav-tabs .nav-link.active {
-            color: white;
+        
+        .service-meta {
+            color: #8FB3DE;
+        }
+        
+        .service-tag {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #A4C2E5;
+        }
+        
+        .review-card {
+            background-color: var(--accent-dark);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .review-rating {
+            color: #FFD700;
         }
     }
     </style>

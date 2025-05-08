@@ -14,10 +14,37 @@
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-[data-bs-theme="dark"] .footer {
-    background-color: #171821;
-    color: rgba(255, 255, 255, 0.85);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+[data-bs-theme="dark"] {
+    .footer {
+        background-color: var(--accent-dark);
+    }
+    
+    .footer-title {
+        color: #FFFFFF;
+    }
+    
+    .footer-description,
+    .footer-text,
+    .footer-link,
+    .contact-text {
+        color: #A4C2E5;
+    }
+    
+    .footer-link:hover {
+        color: #FFFFFF;
+    }
+    
+    .footer-heading {
+        color: #FFFFFF;
+    }
+    
+    .footer-bottom {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .copyright-text {
+        color: #8FB3DE;
+    }
 }
 
 .footer-container {

@@ -453,17 +453,16 @@ $showRegisterForm = isset($_GET['register']) && $_GET['register'] === 'true';
             margin-bottom: 0.5rem;
         }
 
-        [data-bs-theme="dark"] .auth-title {
-            color: var(--light);
+        [data-bs-theme="dark"] .auth-title,
+        [data-bs-theme="dark"] .auth-subtitle,
+        [data-bs-theme="dark"] .form-label,
+        [data-bs-theme="dark"] .form-text {
+            color: #FFFFFF;
         }
-
-        .auth-subtitle {
-            color: var(--accent);
-            opacity: 0.8;
-        }
-
-        [data-bs-theme="dark"] .auth-subtitle {
-            color: var(--accent);
+        
+        .auth-text,
+        .auth-description {
+            color: #A4C2E5;
         }
 
         .form-group {
@@ -499,9 +498,9 @@ $showRegisterForm = isset($_GET['register']) && $_GET['register'] === 'true';
         }
 
         [data-bs-theme="dark"] .form-control {
-            background-color: #2a2b36;
-            border-color: rgba(255, 255, 255, 0.1);
             color: #FFFFFF;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         [data-bs-theme="dark"] .form-control:focus {

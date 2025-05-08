@@ -65,15 +65,6 @@
     color: #8FB3DE;
 }
 
-[data-bs-theme="dark"] .navbar-brand {
-    color: #FFFFFF;
-    text-shadow: 0 0 15px rgba(180, 210, 240, 0.2);
-}
-
-[data-bs-theme="dark"] .navbar-brand:hover {
-    color: #A8C8E8;
-}
-
 .nav-link {
     font-weight: 600;
     margin: 0 0.7rem;
@@ -102,32 +93,12 @@
     width: 100%;
 }
 
-[data-bs-theme="dark"] .nav-link {
-    color: rgba(210, 225, 245, 0.9);
-}
-
-[data-bs-theme="dark"] .nav-link:hover {
-    color: #A8C8E8;
-}
-
-[data-bs-theme="dark"] .nav-link::after {
-    background-color: #A8C8E8;
-}
-
 .navbar.scrolled .nav-link {
     color: #555;
 }
 
 .navbar.scrolled .nav-link:hover {
     color: #5D8BB3;
-}
-
-[data-bs-theme="dark"] .navbar.scrolled .nav-link {
-    color: rgba(210, 225, 245, 0.8);
-}
-
-[data-bs-theme="dark"] .navbar.scrolled .nav-link:hover {
-    color: #A8C8E8;
 }
 
 .login-btn {
@@ -149,14 +120,33 @@
     color: white;
 }
 
-[data-bs-theme="dark"] .login-btn {
-    background: linear-gradient(90deg, #6D9BC4, #9CBDE2);
-    box-shadow: 0 4px 10px rgba(93, 139, 179, 0.25);
-}
-
-[data-bs-theme="dark"] .login-btn:hover {
-    background: linear-gradient(90deg, #7BA4CD, #A8C8E8);
-    box-shadow: 0 6px 15px rgba(93, 139, 179, 0.35), 0 0 8px rgba(93, 139, 179, 0.2);
+[data-bs-theme="dark"] {
+    .nav-link {
+        color: rgba(210, 225, 245, 0.9);
+    }
+    
+    .nav-link:hover {
+        color: #FFFFFF;
+    }
+    
+    .navbar-brand,
+    .navbar-text {
+        color: #FFFFFF;
+    }
+    
+    .dropdown-menu {
+        background-color: var(--accent-dark);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .dropdown-item {
+        color: #A4C2E5;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #FFFFFF;
+    }
 }
 
 .theme-toggle {
@@ -182,15 +172,6 @@
     transform: rotate(15deg);
 }
 
-[data-bs-theme="dark"] .theme-toggle {
-    color: rgba(210, 225, 245, 0.9);
-}
-
-[data-bs-theme="dark"] .theme-toggle:hover {
-    color: #A8C8E8;
-    background-color: rgba(210, 225, 245, 0.1);
-}
-
 .navbar.scrolled .theme-toggle {
     color: #555;
 }
@@ -198,15 +179,6 @@
 .navbar.scrolled .theme-toggle:hover {
     color: #5D8BB3;
     background-color: rgba(93, 139, 179, 0.1);
-}
-
-[data-bs-theme="dark"] .navbar.scrolled .theme-toggle {
-    color: rgba(210, 225, 245, 0.8);
-}
-
-[data-bs-theme="dark"] .navbar.scrolled .theme-toggle:hover {
-    color: #A8C8E8;
-    background-color: rgba(210, 225, 245, 0.1);
 }
 
 .navbar-toggler {

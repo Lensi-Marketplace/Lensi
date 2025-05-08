@@ -45,6 +45,9 @@ if ($profileData && !empty($profileData['profile_image'])) {
                     case 'job-offers':
                         $pageTitle = 'Job Offers';
                         break;
+                    case 'interviews':
+                        $pageTitle = 'Interviews';
+                        break;
                     case 'messages':
                         $pageTitle = 'Messages';
                         break;

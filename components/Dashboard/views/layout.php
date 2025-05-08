@@ -13,6 +13,9 @@
     <meta name="theme-color" content="#3E5C76">
     <title>Dashboard - LenSi Freelance Marketplace</title>
     
+    <!-- Critical CSS and resources -->
+    <link rel="preload" href="/web/assets/images/logo_white.svg" as="image" type="image/svg+xml" fetchpriority="high">
+    
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/web/assets/images/logo_white.svg" sizes="any">
     
@@ -20,7 +23,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
+
+    <!-- Page loading animation -->
+    <style>
+    .page-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--light);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        will-change: opacity, visibility;
+    }
+
+    .page-loading.loaded {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 3px solid rgba(var(--primary-rgb), 0.1);
+        border-top-color: var(--primary);
+        animation: spin 0.8s linear infinite;
+        will-change: transform;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    </style>
+
     <style>
     /* Root CSS Variables */
     :root {
@@ -707,20 +748,6 @@
     [data-bs-theme="dark"] input:checked + .theme-slider {
         background-color: var(--secondary);
     }
-    
-    /* Animations */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-    
-    .fade-in {
-        animation: fadeIn 0.5s ease;
-    }
     </style>
 </head>
 <body>
@@ -743,9 +770,23 @@
                             Dashboard
                         </a>
                     </li>
-                    <?php if ($userType === 'freelancer'): ?>
+
+                    <?php if ($userType === 'admin'): ?>
                     <li class="sidebar-menu-item">
-                        <a href="?page=projects" class="sidebar-menu-link">
+                        <a href="?page=job-offers" class="sidebar-menu-link <?php echo ($page === 'job-offers') ? 'active' : ''; ?>">
+                            <i class="bi bi-briefcase-fill sidebar-menu-icon"></i>
+                            Job Offers
+                        </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                        <a href="?page=interviews" class="sidebar-menu-link <?php echo ($page === 'interviews') ? 'active' : ''; ?>">
+                            <i class="bi bi-calendar2-week sidebar-menu-icon"></i>
+                            Interviews
+                        </a>
+                    </li>
+                    <?php elseif ($userType === 'freelancer'): ?>
+                    <li class="sidebar-menu-item">
+                        <a href="?page=projects" class="sidebar-menu-link <?php echo ($page === 'projects') ? 'active' : ''; ?>">
                             <i class="bi bi-briefcase-fill sidebar-menu-icon"></i>
                             Projects
                         </a>
@@ -757,28 +798,9 @@
                         </a>
                     </li>
                     <li class="sidebar-menu-item">
-                        <a href="?page=messages" class="sidebar-menu-link">
-                            <i class="bi bi-chat-dots-fill sidebar-menu-icon"></i>
-                            Messages
-                        </a>
-                    </li>
-                    <?php elseif ($userType === 'employer'): ?>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link">
-                            <i class="bi bi-briefcase-fill sidebar-menu-icon"></i>
-                            My Projects
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link">
-                            <i class="bi bi-people-fill sidebar-menu-icon"></i>
-                            Find Talent
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link">
-                            <i class="bi bi-chat-dots-fill sidebar-menu-icon"></i>
-                            Messages
+                        <a href="?page=interviews" class="sidebar-menu-link <?php echo ($page === 'interviews') ? 'active' : ''; ?>">
+                            <i class="bi bi-calendar2-week sidebar-menu-icon"></i>
+                            Interviews
                         </a>
                     </li>
                     <?php endif; ?>
@@ -843,6 +865,9 @@
                             case 'services':
                                 echo 'Job Offers';
                                 break;
+                            case 'interviews':
+                                echo 'My Interviews';
+                                break;
                             default:
                                 echo 'Dashboard';
                         }
@@ -881,6 +906,7 @@
                             </div>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="?page=profile"><i class="bi bi-person-circle me-2"></i>My Profile</a></li>
+                                <li><a class="dropdown-item" href="?page=interviews"><i class="bi bi-calendar2-week me-2"></i>My Interviews</a></li>
                                 <li><a class="dropdown-item" href="?page=settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="../Login/login.php?logout=true"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
@@ -897,9 +923,12 @@
         </div>
     </div>
     
-    <!-- Scripts -->
+    <!-- Initialize JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    // Remove preload class immediately
+    document.documentElement.classList.remove('preload');
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Elements
         const sidebar = document.getElementById('sidebar');
@@ -913,6 +942,7 @@
             sidebar.classList.toggle('expanded');
         }
         
+        // Initialize event listeners
         if (menuToggle) {
             menuToggle.addEventListener('click', toggleSidebar);
         }
@@ -923,15 +953,22 @@
         
         // Theme toggle functionality
         if (themeToggle) {
+            // Set initial state based on current theme
+            themeToggle.checked = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            
             themeToggle.addEventListener('change', function() {
                 const newTheme = this.checked ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-bs-theme', newTheme);
-                
-                // Save theme preference
                 localStorage.setItem('theme', newTheme);
-                
-                // Set cookie for PHP to read on next page load
                 document.cookie = `theme=${newTheme}; path=/; max-age=31536000`; // 1 year
+                
+                // Force refresh theme-sensitive elements
+                document.querySelectorAll('[data-bs-theme]').forEach(el => {
+                    const display = window.getComputedStyle(el).display;
+                    el.style.display = 'none';
+                    void el.offsetHeight; // Trigger reflow
+                    el.style.display = display;
+                });
             });
         }
         
@@ -940,6 +977,9 @@
         dropdownElementList.map(function (dropdownToggleEl) {
             return new bootstrap.Dropdown(dropdownToggleEl);
         });
+        
+        // Remove any loading states
+        document.body.classList.remove('loading');
     });
     </script>
 </body>

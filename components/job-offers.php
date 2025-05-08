@@ -3,6 +3,28 @@
  * Job Offers Component
  * Displays current job opportunities with interactive 3D hover effects
  */
+
+// Ensure no output has been sent before starting the session
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+    session_start();
+} elseif (session_status() === PHP_SESSION_NONE && headers_sent()) {
+    // Log the error but continue execution
+    error_log('Warning: Session could not be started in job-offers.php because headers have already been sent');
+}
+
+// Include database connection
+require_once __DIR__ . '/../config/database.php';
+
+// Fetch all job offers
+$sql = "SELECT jo.*, jc.name as category_name, l.city, l.country, l.is_remote,
+       (SELECT COUNT(*) FROM job_applications WHERE job_id = jo.job_id) as applicant_count
+        FROM job_offers jo
+        LEFT JOIN job_categories jc ON jo.category_id = jc.category_id
+        LEFT JOIN locations l ON jo.location_id = l.location_id
+        ORDER BY jo.created_at DESC";
+
+$stmt = $pdo->query($sql);
+$jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <style>
@@ -361,102 +383,56 @@
         </div>
         
         <div class="job-offers-grid">
-            <!-- Job Offer 1 -->
-            <div class="job-card stagger-item">
-                <div class="job-card-img" style="background-image: url('https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80')">
-                    <span class="job-card-category">Development</span>
+            <?php if (empty($jobs)): ?>
+                <div class="text-center w-100 py-5">
+                    <i class="bi bi-briefcase-x display-4 text-muted"></i>
+                    <p class="mt-3 text-muted">No job offers available at the moment.</p>
                 </div>
-                <div class="job-card-content">
-                    <h3 class="job-card-title">Full Stack Developer</h3>
-                    <p class="job-card-description">We're looking for an experienced Full Stack Developer to join our team and help build innovative web applications using modern technologies.</p>
-                    
-                    <div class="job-card-meta">
-                        <div class="job-meta-item">
-                            <i class="bi bi-cash-stack"></i>
-                            <span>$85,000 - $110,000</span>
+            <?php else: ?>
+                <?php foreach ($jobs as $job): ?>
+                    <div class="job-card stagger-item">
+                        <div class="job-card-img" style="background-image: url('<?php echo htmlspecialchars($job['image_url'] ?? 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'); ?>')">
+                            <span class="job-card-category"><?php echo htmlspecialchars($job['category_name']); ?></span>
                         </div>
-                        <div class="job-meta-item">
-                            <i class="bi bi-geo-alt"></i>
-                            <span>Copenhagen, Denmark</span>
-                        </div>
-                        <div class="job-meta-item">
-                            <i class="bi bi-people"></i>
-                            <span>24 applicants</span>
+                        <div class="job-card-content">
+                            <h3 class="job-card-title"><?php echo htmlspecialchars($job['title']); ?></h3>
+                            <p class="job-card-description"><?php echo htmlspecialchars(substr($job['description'], 0, 150)) . '...'; ?></p>
+                            
+                            <div class="job-card-meta">
+                                <div class="job-meta-item">
+                                    <i class="bi bi-cash-stack"></i>
+                                    <span>$<?php echo number_format($job['salary_min']); ?> - $<?php echo number_format($job['salary_max']); ?></span>
+                                </div>
+                                <div class="job-meta-item">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span><?php echo $job['is_remote'] ? 'Remote' : htmlspecialchars($job['city'] . ', ' . $job['country']); ?></span>
+                                </div>
+                                <div class="job-meta-item">
+                                    <i class="bi bi-people"></i>
+                                    <span><?php echo $job['applicant_count']; ?> applicants</span>
+                                </div>
+                            </div>
+                            
+                            <div class="job-card-footer">
+                                <span class="job-card-salary">Annual Salary</span>
+                                <button class="job-card-apply" data-job-id="<?php echo $job['job_id']; ?>">
+                                    Apply Now
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="job-card-footer">
-                        <span class="job-card-salary">Annual Salary</span>
-                        <button class="job-card-apply">Apply Now</button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Job Offer 2 -->
-            <div class="job-card stagger-item">
-                <div class="job-card-img" style="background-image: url('https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80')">
-                    <span class="job-card-category">Design</span>
-                </div>
-                <div class="job-card-content">
-                    <h3 class="job-card-title">UI/UX Designer</h3>
-                    <p class="job-card-description">Join our design team to create beautiful, intuitive interfaces for our products. Must have experience with Figma and user research.</p>
-                    
-                    <div class="job-card-meta">
-                        <div class="job-meta-item">
-                            <i class="bi bi-cash-stack"></i>
-                            <span>$75,000 - $95,000</span>
-                        </div>
-                        <div class="job-meta-item">
-                            <i class="bi bi-geo-alt"></i>
-                            <span>Remote (Global)</span>
-                        </div>
-                        <div class="job-meta-item">
-                            <i class="bi bi-people"></i>
-                            <span>18 applicants</span>
-                        </div>
-                    </div>
-                    
-                    <div class="job-card-footer">
-                        <span class="job-card-salary">Annual Salary</span>
-                        <button class="job-card-apply">Apply Now</button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Job Offer 3 -->
-            <div class="job-card stagger-item">
-                <div class="job-card-img" style="background-image: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80')">
-                    <span class="job-card-category">Management</span>
-                </div>
-                <div class="job-card-content">
-                    <h3 class="job-card-title">Digital Project Manager</h3>
-                    <p class="job-card-description">Lead digital projects from conception to launch. Coordinate between teams and ensure timely delivery within budget.</p>
-                    
-                    <div class="job-card-meta">
-                        <div class="job-meta-item">
-                            <i class="bi bi-cash-stack"></i>
-                            <span>$90,000 - $120,000</span>
-                        </div>
-                        <div class="job-meta-item">
-                            <i class="bi bi-geo-alt"></i>
-                            <span>New York, USA</span>
-                        </div>
-                        <div class="job-meta-item">
-                            <i class="bi bi-people"></i>
-                            <span>12 applicants</span>
-                        </div>
-                    </div>
-                    
-                    <div class="job-card-footer">
-                        <span class="job-card-salary">Annual Salary</span>
-                        <button class="job-card-apply">Apply Now</button>
-                    </div>
-                </div>
-            </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
     <div class="job-corner-decoration job-corner-decoration-2"></div>
 </section>
+
+<!-- Include the Schedule Interview Modal -->
+<?php
+// Session is already started at the beginning of this file
+include_once(__DIR__ . '/home/offers/schedule-interview-modal.php');
+?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -495,4 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(jobSection);
     }
 });
+
+// Include the Schedule Interview JS
+document.write('<script src="/web/components/home/offers/schedule-interview.js"><\/script>');
 </script>

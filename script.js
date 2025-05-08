@@ -71,7 +71,6 @@
         // Save preference if requested
         if (savePreference) {
             localStorage.setItem('theme', theme);
-            // Also set cookie for server-side awareness
             document.cookie = `theme=${theme}; path=/; max-age=31536000`; // 1 year
         }
         
@@ -79,6 +78,12 @@
         updateThemeIcon();
         updateLogos(theme);
         updateCustomElements(theme);
+        
+        // Update dashboard theme toggle if it exists
+        const dashboardThemeToggle = document.getElementById('themeToggle');
+        if (dashboardThemeToggle && dashboardThemeToggle.type === 'checkbox') {
+            dashboardThemeToggle.checked = theme === 'dark';
+        }
         
         // Force refresh for theme-sensitive elements
         refreshThemeSensitiveElements();
@@ -617,4 +622,13 @@
     
     // Initialize everything on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', init);
+    
+    // Also initialize on window load as a fallback
+    window.addEventListener('load', function() {
+        // Check if body still has loading class
+        if (document.body.classList.contains('loading')) {
+            console.log('Initializing on window load as fallback');
+            init();
+        }
+    });
 })();
