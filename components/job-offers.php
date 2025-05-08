@@ -254,6 +254,18 @@ $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     box-shadow: 0 5px 15px rgba(93, 139, 179, 0.3);
 }
 
+.post-job-btn {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    box-shadow: 0 5px 15px rgba(93, 139, 179, 0.25);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.post-job-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(93, 139, 179, 0.4);
+}
+
 /* Dark mode adjustments */
 [data-bs-theme="dark"] .job-card {
     background: rgba(31, 32, 40, 0.8);
@@ -380,6 +392,9 @@ $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="job-offers-header">
             <h2 class="job-offers-title">Current Job Opportunities</h2>
             <p class="job-offers-subtitle">Join our team of talented professionals and work on exciting projects</p>
+            <div class="text-center mt-4">
+                <a href="/web/components/home/offers/offers.php" class="btn job-card-apply post-job-btn" onclick="window.location.href='/web/components/home/offers/offers.php'; return false;">Post a Job</a>
+            </div>
         </div>
         
         <div class="job-offers-grid">
@@ -474,4 +489,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Include the Schedule Interview JS
 document.write('<script src="/web/components/home/offers/schedule-interview.js"><\/script>');
+
+// Add event listener for the Post a Job button
+document.addEventListener('DOMContentLoaded', function() {
+    const postJobBtn = document.querySelector('.post-job-btn');
+    if (postJobBtn) {
+        postJobBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/web/components/home/offers/offers.php';
+        });
+    }
+});
 </script>
