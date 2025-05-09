@@ -53,6 +53,73 @@ class InterviewModel {
     }
     
     /**
+     * Get future scheduled interviews for a specific user
+     * Returns interviews that:
+     * 1. Belong to the specified user
+     * 2. Have dates in the future compared to current time
+     * 3. Have status = 'Scheduled'
+     * 4. Are sorted by date (closest first)
+     * 
+     * @param string $userEmail The email of the user
+     * @return array Sorted array of future interviews
+     */
+    public function getFutureInterviews($userEmail) {
+        // Get all user interviews
+        $interviews = $this->getUserInterviews($userEmail);
+        
+        // Filter future interviews
+        $futureInterviews = [];
+        $now = new DateTime();
+        
+        foreach ($interviews as $interview) {
+            $interviewDate = new DateTime($interview['interview_date']);
+            if ($interviewDate > $now && $interview['status'] === 'Scheduled') {
+                $futureInterviews[] = $interview;
+            }
+        }
+        
+        // Sort future interviews by date (earliest first)
+        usort($futureInterviews, function($a, $b) {
+            return strtotime($a['interview_date']) - strtotime($b['interview_date']);
+        });
+        
+        return $futureInterviews;
+    }
+    
+    /**
+     * Get the next upcoming interview for a user
+     * Returns the closest scheduled interview in the future
+     * 
+     * @param string $userEmail The email of the user
+     * @return array|null The next interview or null if none found
+     */
+    public function getNextInterview($userEmail) {
+        $futureInterviews = $this->getFutureInterviews($userEmail);
+        
+        // Return the first interview (closest) or null if none
+        return !empty($futureInterviews) ? $futureInterviews[0] : null;
+    }
+    
+    /**
+     * Get interviews filtered by status
+     * 
+     * @param string $userEmail The email of the user
+     * @param string $status The status to filter by ('all' for no filter)
+     * @return array Filtered interviews
+     */
+    public function getInterviewsByStatus($userEmail, $status = 'all') {
+        $interviews = $this->getUserInterviews($userEmail);
+        
+        if ($status !== 'all') {
+            $interviews = array_filter($interviews, function($interview) use ($status) {
+                return strtolower($interview['status']) === strtolower($status);
+            });
+        }
+        
+        return $interviews;
+    }
+    
+    /**
      * Create a new interview
      */
     public function createInterview($data) {

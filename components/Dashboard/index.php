@@ -168,7 +168,49 @@ switch ($page) {
         $jobOfferController->index();
         break;
     case 'interviews':
-        $interviewController->index();
+        // Get user info from session
+        $user = $_SESSION['user'];
+        $userEmail = $user['email'];
+        $userType = $user['user_type'] ?? 'freelancer';
+        
+        // Process POST requests (form submissions)
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+            $result = $interviewController->processInterviewForm($_POST);
+            
+            // Handle AJAX requests
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit;
+            }
+            
+            // For regular form posts, set session messages and redirect
+            if ($result['success']) {
+                $_SESSION['success_message'] = $result['message'];
+            } else {
+                $_SESSION['error_message'] = $result['message'];
+            }
+            
+            // Redirect to prevent form resubmission
+            header('Location: /web/components/Dashboard/index.php?page=interviews');
+            exit;
+        }
+        
+        // Get interview data for the view
+        $dashboardData = $interviewController->getInterviewDashboardData($userEmail);
+        
+        // Extract data for the view
+        $interviews = $dashboardData['success'] ? $dashboardData['interviews'] : [];
+        $nextInterview = $dashboardData['success'] ? $dashboardData['nextInterview'] : null;
+        $error = $dashboardData['success'] ? null : $dashboardData['error'];
+        
+        // Load the appropriate view based on user type
+        if ($userType === 'admin') {
+            include __DIR__ . '/views/dashboard/admin_interviews.php';
+        } else {
+            include __DIR__ . '/views/dashboard/user_interviews.php';
+        }
         break;
     default:
         // Default to dashboard if page not found

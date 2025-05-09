@@ -1,207 +1,142 @@
 <?php
 /**
- * Interview Controller - Handles all interview-related operations
+ * Interview Controller
+ * Handles all interview-related business logic and request processing
+ * Following strict MVC architecture
  */
 class InterviewController {
     private $interviewModel;
     
+    /**
+     * Constructor - initializes the model
+     */
     public function __construct() {
         require_once __DIR__ . '/../models/InterviewModel.php';
         $this->interviewModel = new InterviewModel();
     }
     
     /**
-     * Display interview listing page
+     * Get data for the interview dashboard view
+     * 
+     * @param string $userEmail The email of the logged-in user
+     * @return array Data for the view
      */
-    public function index() {
-        $user = $_SESSION['user'];
-        $userEmail = $user['email'];
-        $userType = $user['user_type'] ?? 'freelancer';
-        
+    public function getInterviewDashboardData($userEmail) {
         try {
-            if ($userType === 'admin') {
-                $data = [
-                    'interviews' => $this->interviewModel->getAllInterviews($userEmail),
-                    'jobOffers' => $this->interviewModel->getJobOffers(),
-                    'stats' => $this->interviewModel->getInterviewStats($userEmail)
-                ];
-                include __DIR__ . '/../views/dashboard/admin_interviews.php';
+            // Get all interviews for display in the table
+            $interviews = $this->interviewModel->getUserInterviews($userEmail);
+            
+            // Get only the next upcoming interview for the countdown timer
+            $nextInterview = $this->interviewModel->getNextInterview($userEmail);
+            
+            return [
+                'success' => true,
+                'interviews' => $interviews,
+                'nextInterview' => $nextInterview
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Filter interviews by status
+     * 
+     * @param string $userEmail The email of the logged-in user
+     * @param string $status The status to filter by
+     * @return array Filtered interviews
+     */
+    public function filterInterviewsByStatus($userEmail, $status = 'all') {
+        try {
+            $interviews = $this->interviewModel->getInterviewsByStatus($userEmail, $status);
+            
+            return [
+                'success' => true,
+                'interviews' => $interviews
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Process interview form submission (update or create)
+     * 
+     * @param array $formData The submitted form data
+     * @return array Result of the operation
+     */
+    public function processInterviewForm($formData) {
+        try {
+            // Validate form data
+            $this->validateInterviewData($formData);
+            
+            // Process based on action type
+            if ($formData['action'] === 'update' && !empty($formData['id'])) {
+                $result = $this->interviewModel->updateInterview($formData['id'], $formData);
+                $message = 'Interview updated successfully';
             } else {
-                include __DIR__ . '/../views/dashboard/user_interviews.php';
-            }
-        } catch (Exception $e) {
-            $error = $e->getMessage();
-            include __DIR__ . '/../views/error.php';
-        }
-    }
-    
-    /**
-     * Handle interview creation
-     */
-    public function create() {
-        // Get user email from form or session if user is logged in
-        $userEmail = $_POST['user_email'] ?? ($_SESSION['user']['email'] ?? null);
-        
-        if (empty($userEmail)) {
-            throw new Exception('User email is required');
-        }
-        
-        try {
-            // Validate required fields
-            if (empty($_POST['candidate_name']) || empty($_POST['position_title']) || 
-                empty($_POST['interview_date']) || empty($_POST['interviewer']) || 
-                empty($_POST['location']) || empty($_POST['status'])) {
-                throw new Exception('All required fields must be filled');
-            }
-
-            $interviewData = $_POST;
-            $result = $this->interviewModel->createInterview($interviewData);
-            
-            // If it's an AJAX request, return JSON response
-            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => $result,
-                    'message' => $result ? 'Interview scheduled successfully!' : 'Failed to schedule interview'
-                ]);
-                exit;
+                $result = $this->interviewModel->createInterview($formData);
+                $message = 'Interview created successfully';
             }
             
             return [
-                'success' => $result,
-                'message' => $result ? 'Interview scheduled successfully!' : 'Failed to schedule interview'
+                'success' => true,
+                'message' => $message
             ];
         } catch (Exception $e) {
-            // If it's an AJAX request, return JSON response
-            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-                exit;
-            }
-            return ['success' => false, 'message' => $e->getMessage()];
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
     }
     
     /**
-     * Handle interview update
+     * Validate interview data
+     * Throws exceptions for invalid data
+     * 
+     * @param array $data The data to validate
+     * @throws Exception If validation fails
      */
-    public function update($id) {
-        // Get user email either from form or session
-        $userEmail = $_POST['user_email'] ?? ($_SESSION['user']['email'] ?? null);
+    private function validateInterviewData($data) {
+        // Required fields
+        $requiredFields = [
+            'position_title' => 'Position title',
+            'interview_date' => 'Interview date',
+            'interviewer' => 'Interviewer',
+            'location' => 'Location',
+            'status' => 'Status',
+            'candidate_name' => 'Candidate name'
+        ];
         
-        if (!$userEmail) {
-            error_log("Update Interview Error: No user email provided");
-            throw new Exception('User email is required');
+        // Check required fields
+        foreach ($requiredFields as $field => $label) {
+            if (empty($data[$field])) {
+                throw new Exception("{$label} is required");
+            }
         }
-
-        try {
-            if (!$id) {
-                error_log("Update Interview Error: No interview ID provided");
-                throw new Exception('Interview ID is required');
-            }
-
-            // Log incoming data for debugging
-            error_log("Update interview request for ID: $id from user: $userEmail");
-            error_log("POST data: " . print_r($_POST, true));
-
-            // Validate required fields
-            $requiredFields = ['candidate_name', 'position_title', 'interview_date', 'interviewer', 'location', 'status'];
-            $missingFields = [];
-            
-            foreach ($requiredFields as $field) {
-                if (empty($_POST[$field])) {
-                    $missingFields[] = $field;
-                }
-            }
-            
-            if (!empty($missingFields)) {
-                $errorMsg = 'Missing required fields: ' . implode(', ', $missingFields);
-                error_log("Update Interview Error: $errorMsg");
-                throw new Exception($errorMsg);
-            }
-
-            // Create data array with user email
-            $interviewData = array_merge($_POST, ['user_email' => $userEmail]);
-            
-            // Ensure job_offer_id is properly handled (can be null)
-            if (empty($interviewData['job_offer_id'])) {
-                $interviewData['job_offer_id'] = null;
-            }
-            
-            // Update the interview
-            $result = $this->interviewModel->updateInterview($id, $interviewData);
-
-            // Log the result
-            error_log("Update result for interview ID $id: " . ($result ? "Success" : "Failed"));
-
-            // If it's an AJAX request, return JSON response
-            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-                // Ensure Content-Type header is set if not already sent
-                if (!headers_sent()) {
-                    header('Content-Type: application/json');
-                }
-                echo json_encode([
-                    'success' => $result,
-                    'message' => $result ? 'Interview updated successfully!' : 'Failed to update interview'
-                ]);
-                exit;
-            }
-
-            return [
-                'success' => $result,
-                'message' => $result ? 'Interview updated successfully!' : 'Failed to update interview'
-            ];
-        } catch (Exception $e) {
-            // Log the error
-            error_log("Error updating interview ID $id: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            
-            // If it's an AJAX request, return JSON response
-            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-                // Ensure Content-Type header is set if not already sent
-                if (!headers_sent()) {
-                    header('Content-Type: application/json');
-                }
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-                exit;
-            }
-            return ['success' => false, 'message' => $e->getMessage()];
+        
+        // Validate interview date is a valid date
+        $interviewDate = strtotime($data['interview_date']);
+        if ($interviewDate === false) {
+            throw new Exception("Invalid interview date format");
         }
-    }
-    
-    /**
-     * Handle interview deletion
-     */
-    public function delete($id) {
-        $userEmail = $_SESSION['user']['email'];
-        try {
-            $result = $this->interviewModel->deleteInterview($id, $userEmail);
-            return [
-                'success' => $result,
-                'message' => $result ? 'Interview deleted successfully!' : 'Failed to delete interview'
-            ];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        
+        // Validate status is one of the allowed values
+        $allowedStatuses = ['Scheduled', 'Completed', 'Cancelled'];
+        if (!in_array($data['status'], $allowedStatuses)) {
+            throw new Exception("Invalid status value");
         }
-    }
-    
-    /**
-     * Get interview details
-     */
-    public function getInterview($id) {
-        $userEmail = $_SESSION['user']['email'];
-        try {
-            $interview = $this->interviewModel->getInterview($id, $userEmail);
-            if (!$interview) {
-                throw new Exception('Interview not found');
-            }
-            return ['success' => true, 'data' => $interview];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+        
+        // Validate URL format for CV URL if provided
+        if (!empty($data['cv_url']) && !filter_var($data['cv_url'], FILTER_VALIDATE_URL)) {
+            throw new Exception("CV URL must be a valid URL");
         }
     }
 }
